@@ -2,9 +2,9 @@
 
 Jupyter notebook for easily downloading Stable Diffusion models (e.g. checkpoints, VAEs, LoRAs, etc).
 
-This notebook is developed to use services like <runpod.io> easily.
+This notebook is developed to use in services like [runpod.io](https://runpod.io) easily.
 
-But you can use this notebook in any environment (local machine, cloud server, Colab, etc).
+But you can use this notebook in any environments (local machine, cloud server, Colab, etc).
 
 ## Usage
 
