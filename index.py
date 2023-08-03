@@ -1,17 +1,37 @@
 import ipywidgets as widgets
 from utils import parse_url 
+import os
 
 class Item:
-  def __init__(self, *, display_name, url, dest, filename = None):
+  def __init__(self, *, display_name, url, dest = None, filename = None):
     self.display_name = display_name
     self.url = url # download url
     self.dest = dest # dir 
     self.filename = filename
 
-def section(*, title, description, store, items = [], textarea_desc='', textarea_placeholder='', textarea = False,  check_all = False):
+def section(*, 
+            title, 
+            store,
+            default_path,
+            description = None, 
+            items = [], 
+            textarea_desc = '', 
+            textarea_placeholder = '', 
+            textarea = False,  
+            check_all = False):
   display(widgets.HTML(f'<h2>{title}</h2>'))
-  display(widgets.HTML(f'<p>{description}</p>'))
+  if description:
+    display(widgets.HTML(f'<p>{description}</p>'))
+
+  display(widgets.HTML(f'<h4>Path<h4>'))
+  path_text = widgets.Text(
+    value = default_path,
+    layout = widgets.Layout(width="95%"),
+  )
+  display(path_text)
+
   if items:
+    display(widgets.HTML(f'<h4>Models<h4>'))
     check_all_box = widgets.Checkbox(
         value = check_all,
         description = 'Check All',
@@ -43,6 +63,7 @@ def section(*, title, description, store, items = [], textarea_desc='', textarea
     return checkbox
   
   for item in items:
+    item.dest = lambda: path_text.value.strip()
     box = checkbox(item)
     if check_all:
       box.value = True
@@ -68,26 +89,27 @@ def section(*, title, description, store, items = [], textarea_desc='', textarea
       placeholder=textarea_placeholder,
       disabled=False)
     display(textarea_box)
+    textarea_box.dest = lambda: path_text.value
     return textarea_box
 
 def render(store):
 
+  display(widgets.HTML(f'<h2>Root Path</h2>'))
+  display(widgets.HTML(f'<p>Specity the root directory of the project (e.g. <b>stable-diffusin-wedui</b> or <b>ComfyUI</b>).</p>'))
+  root_text_input = widgets.Text(value = '/workspace/stable-diffusion-webui/')
+  display(root_text_input)
+
   checkpoint_list = [
     Item(display_name = 'v1-5-pruned-emaonly (4.27 GB)',
-         url = f'https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned.safetensors',
-         dest = 'models/Stable-diffusion/'),
+         url = f'https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned.safetensors',),
     Item(display_name = 'v1-5-pruned (7.7 GB)',
-         url = f'https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned.safetensors',
-         dest = 'models/Stable-diffusion/'),
+         url = f'https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned.safetensors',),
     Item(display_name = 'sd-v1-5-inpainting (4.27 GB)',
-         url = f'https://huggingface.co/runwayml/stable-diffusion-inpainting/resolve/main/sd-v1-5-inpainting.ckpt',
-         dest = 'models/Stable-diffusion/'),
+         url = f'https://huggingface.co/runwayml/stable-diffusion-inpainting/resolve/main/sd-v1-5-inpainting.ckpt',),
     Item(display_name = 'sd_xl_base_1.0 (6.94 GB)',
-         url = f'https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors',
-         dest = 'models/Stable-diffusion/'),
+         url = f'https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors',),
     Item(display_name = 'sd_xl_refiner_1.0 (6.08 GB)',
-         url = f'https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0/resolve/main/sd_xl_refiner_1.0.safetensors',
-         dest = 'models/Stable-diffusion/'),
+         url = f'https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0/resolve/main/sd_xl_refiner_1.0.safetensors',),
   ]
 
   textarea_desc = 'You can also paste multiple model URLs into textarea below from civitai.com or huggingface.co. '
@@ -100,7 +122,7 @@ def render(store):
   textarea_desc += 'So ignored when parsing URL, but useful for taking memo (e.g. model name).'
 
   checkpoint_textarea = section(title = 'Checkpoints', 
-                                description = 'This downloads checkpoints into models/Stable-diffusion/',
+                                default_path = 'models/Stable-diffusion/',
                                 items = checkpoint_list, 
                                 textarea = True,
                                 textarea_desc = textarea_desc,
@@ -109,91 +131,72 @@ https://civitai.com/models/20282?modelVersionId=58992 ## Henmix_Real v3.0
 https://huggingface.co/CompVis/stable-diffusion-v-1-4-original/blob/main/sd-v1-4-full-ema.ckpt
 https://civitai.com/models/33918 ## Shampoo Mix latest version''',
                                 store = store)
-  checkpoint_textarea.dest = 'models/Stable-diffusion/'
 
   vae_list = [
     Item(display_name = 'vae-ft-ema-560000-ema-pruned (335 MB)',
-         url = 'https://huggingface.co/stabilityai/sd-vae-ft-ema-original/resolve/main/vae-ft-ema-560000-ema-pruned.safetensors',
-         dest = 'models/VAE/'),
+         url = 'https://huggingface.co/stabilityai/sd-vae-ft-ema-original/resolve/main/vae-ft-ema-560000-ema-pruned.safetensors',),
     Item(display_name = 'vae-ft-mse-840000-ema-pruned (335 MB)',
-         url = 'https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors',
-         dest = 'models/VAE/'),
+         url = 'https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors',),
     Item(display_name = 'kl-f8-anime2 (405 MB)',
-         url = 'https://huggingface.co/hakurei/waifu-diffusion-v1-4/resolve/main/vae/kl-f8-anime2.ckpt',
-         dest = 'models/VAE/'),     
+         url = 'https://huggingface.co/hakurei/waifu-diffusion-v1-4/resolve/main/vae/kl-f8-anime2.ckpt',),     
     Item(display_name = 'sdxl_vae (335 MB)',
-         url = 'https://huggingface.co/stabilityai/sdxl-vae/resolve/main/sdxl_vae.safetensors',
-         dest = 'models/VAE/'),
+         url = 'https://huggingface.co/stabilityai/sdxl-vae/resolve/main/sdxl_vae.safetensors',),
   ]
 
   vae_textarea = section(title = 'VAEs', 
-                         description = 'This downloads models into models/VAE/',
+                         default_path = 'models/VAE/',
                          items = vae_list, 
                          textarea = True,
                          textarea_desc = 'The rule is same as "Custom URLs" from "Checkpoints" section.',
                          store = store)
-  vae_textarea.dest = 'models/VAE/'
   
   textual_inversion_list = [
     Item(display_name = 'bad_prompt.pt',
-         url = 'https://huggingface.co/datasets/Nerfgun3/bad_prompt/resolve/main/bad_prompt.pt',
-         dest = 'embeddings/'),
+         url = 'https://huggingface.co/datasets/Nerfgun3/bad_prompt/resolve/main/bad_prompt.pt',),
     Item(display_name = 'bad_prompt_version2.pt',
-         url = 'https://huggingface.co/datasets/Nerfgun3/bad_prompt/resolve/main/bad_prompt_version2.pt',
-         dest = 'embeddings/'),
+         url = 'https://huggingface.co/datasets/Nerfgun3/bad_prompt/resolve/main/bad_prompt_version2.pt',),
     Item(display_name = 'EasyNegative.safetensors',
-         url = 'https://huggingface.co/datasets/gsdf/EasyNegative/resolve/main/EasyNegative.safetensors',
-         dest = 'embeddings/'),
+         url = 'https://huggingface.co/datasets/gsdf/EasyNegative/resolve/main/EasyNegative.safetensors',),
     Item(display_name = 'badhandv4',
-         url = 'https://civitai.com/api/download/models/20068',
-         dest = 'embeddings/'),
+         url = 'https://civitai.com/api/download/models/20068',),
     Item(display_name = 'negative_hand-neg.pt',
-         url = 'https://civitai.com/api/download/models/60938',
-         dest = 'embeddings/'),
+         url = 'https://civitai.com/api/download/models/60938',),
     Item(display_name = 'ng_deepnegative_v1_75t.pt',
-         url = 'https://civitai.com/api/download/models/5637',
-         dest = 'embeddings/'),
+         url = 'https://civitai.com/api/download/models/5637',),
     Item(display_name = 'ulzzang-6500.pt',
-         url = 'https://huggingface.co/yesyeahvh/ulzzang-6500/resolve/main/ulzzang-6500.pt',
-         dest = 'embeddings'),
+         url = 'https://huggingface.co/yesyeahvh/ulzzang-6500/resolve/main/ulzzang-6500.pt',),
     Item(display_name = 'pureerosface_v1.pt',
-         url = 'https://civitai.com/api/download/models/5119',
-         dest = 'embeddings/'),
+         url = 'https://civitai.com/api/download/models/5119',),
   ]
 
   textual_inversion_textarea = section(title = 'Textual Inversions', 
-                                       description = 'This downloads Textual Inversions (Embeddings) into embeddings/',
+                                       default_path = 'embeddings/',
                                        items = textual_inversion_list, 
                                        textarea = True,
                                        textarea_desc = 'The rule is same as "Custom URLs" from "Checkpoints" section.',
                                        store = store) 
-  textual_inversion_textarea.dest = 'models/embeddings/'
   
   hyper_network_textarea = section(title = 'Hyper Networks', 
-                                   description = 'This downloads Hyper Networks into models/hypernetworks/',
+                                   default_path = 'models/hypernetworks/',
                                    textarea = True,
                                    textarea_desc = 'The rule is same as "Custom URLs" from "Checkpoints" section.',
                                    store = store)
-  hyper_network_textarea.dest = 'models/hypernetworks/'
 
   lora_textarea = section(title = 'LoRA', 
-                          description = 'This downloads LoRA into models/Lora/',
+                          default_path = 'models/Lora/',
                           textarea = True,
                           textarea_desc = 'The rule is same as "Custom URLs" from "Checkpoints" section.',
                           store = store)
-  lora_textarea.dest = 'models/Lora/'
   
   lycoris_textarea = section(title = 'LyCORIS', 
-                             description = 'This downloads LyCORIS into models/LyCORIS/',
+                             default_path = 'models/LyCORIS/',
                              textarea = True,
                              textarea_desc = 'The rule is same as "Custom URLs" from "Checkpoints" section.',
                              store = store)
-  lycoris_textarea.dest = 'models/LyCORIS'
 
   controlnet_v1_0_list = [
     Item(display_name = display_name, 
-         url = f'https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/{filename}',
-         dest = 'models/ControlNet/')
+         url = f'https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/{filename}')
     for display_name, filename in [
       ('sd15_canny (5.71 GB)', 'control_sd15_canny.pth'),
       ('sd15_depth (5.71 GB)', 'control_sd15_depth.pth'),
@@ -207,15 +210,13 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version''',
   ]
 
   section(title = 'ControlNet v1.0', 
-          description = 'This downloads models into models/ControlNet/',
+          default_path = 'models/ControlNet/',
           items = controlnet_v1_0_list, 
           store = store)
 
   controlnet_v1_1_list = [
     Item(display_name = display_name, 
-         url = f'https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/{filename}',
-         dest = 'models/ControlNet/'
-        ) 
+         url = f'https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/{filename}') 
     for display_name, filename in [
       ('v11e_sd15_ip2p (1.45 GB)', 'control_v11e_sd15_ip2p.pth'),
       ('v11e_sd15_shuffle (1.45 GB)', 'control_v11e_sd15_shuffle.pth'),
@@ -235,16 +236,14 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version''',
   ]
 
   section(title = 'ControlNet v1.1', 
-          description = 'This downloads models into models/ControlNet/',
+          default_path = 'models/ControlNet/',
           items = controlnet_v1_1_list, 
           store = store, 
           check_all = True)
 
   t2i_adapter_list = [
     Item(display_name = display_name,
-         url = f'https://huggingface.co/TencentARC/T2I-Adapter/resolve/main/models/{filename}',
-         dest = 'models/ControlNet/'
-        ) 
+         url = f'https://huggingface.co/TencentARC/T2I-Adapter/resolve/main/models/{filename}',) 
     for display_name, filename in [
       ('canny_sd14v1 (308 MB)', 't2iadapter_canny_sd14v1.pth'),
       ('canny_sd15v2 (308 MB)', 't2iadapter_canny_sd15v2.pth'),
@@ -263,16 +262,14 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version''',
   ]
 
   section(title = 'T2I-Adapter', 
-          description = 'This downloads models models/ControlNet/',
+          default_path = 'models/ControlNet/',
           items = t2i_adapter_list, 
           store = store, 
           check_all = True)
 
   coadapter_list = [
     Item(display_name = display_name, 
-         url = f'https://huggingface.co/TencentARC/T2I-Adapter/resolve/main/models/{filename}',
-         dest = 'models/ControlNet/'
-        ) 
+         url = f'https://huggingface.co/TencentARC/T2I-Adapter/resolve/main/models/{filename}',) 
     for display_name, filename in [
       ('canny-sd15v1 (308 MB)', 'coadapter-canny-sd15v1.pth'),
       ('color-sd15v1 (74.8 MB)', 'color-coadapter-sd15v1.pth'),
@@ -284,8 +281,8 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version''',
   ]
 
   section(title = 'CoAdapter',
-          description = '''This downloads models into models/ControlNet/.
-          Note that currently sd-webui-controlnet does not support CoAdapter.
+          default_path='models/ControlNet/',
+          description = '''Note that currently sd-webui-controlnet does not support CoAdapter.
           (REF: <a href="http://https://github.com/Mikubill/sd-webui-controlnet/issues/614" target="_blank" style="color: blue; text-decoration:underline;">https://github.com/Mikubill/sd-webui-controlnet/issues/614).</a>''',
           items = coadapter_list, 
           store = store)
@@ -299,7 +296,7 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version''',
     'lycoris': lycoris_textarea,
   }
 
-  return textareas
+  return root_text_input, textareas
 
 def parse_textarea(*, textarea, dest, store):
   lines = textarea.value.split('\n')
