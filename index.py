@@ -9,26 +9,27 @@ class Item:
     self.dest = dest # dir 
     self.filename = filename
 
-def section(*, 
-            title, 
-            store,
-            default_path,
-            description = None, 
-            items = [], 
-            textarea_desc = '', 
-            textarea_placeholder = '', 
-            textarea = False,  
-            check_all = False):
+def section(
+  *, 
+  title, 
+  store,
+  default_path,
+  description = None, 
+  items = [], 
+  textarea_desc = '', 
+  textarea_placeholder = '', 
+  textarea = False,  
+  check_all = False):
   display(widgets.HTML(f'<h2>{title}</h2>'))
   if description:
     display(widgets.HTML(f'<p>{description}</p>'))
 
   display(widgets.HTML(f'<h4>Path<h4>'))
-  path_text = widgets.Text(
+  path_text_input = widgets.Text(
     value = default_path,
-    layout = widgets.Layout(width="95%"),
+    layout = widgets.Layout(width="92%"),
   )
-  display(path_text)
+  display(path_text_input)
 
   if items:
     display(widgets.HTML(f'<h4>Models<h4>'))
@@ -36,6 +37,7 @@ def section(*,
         value = check_all,
         description = 'Check All',
         disabled = False,
+        layout=widgets.Layout(margin='0px', width = "92%")
       )
     display(check_all_box)
 
@@ -44,7 +46,7 @@ def section(*,
   def checkbox(item):
     checkbox = widgets.Checkbox(
       value = False,
-      layout = widgets.Layout(width="100%"),
+      layout = widgets.Layout(width="92%"),
       description = item.display_name,
       disabled = False,
     )
@@ -58,12 +60,13 @@ def section(*,
       elif event['new'] is False:
         check_all_box.value = False
         store.remove(item)
+
     checkbox.observe(on_click)
     display(checkbox)
     return checkbox
   
   for item in items:
-    item.dest = lambda: path_text.value.strip()
+    item.dest = lambda: path_text_input.value.strip()
     box = checkbox(item)
     if check_all:
       box.value = True
@@ -85,18 +88,28 @@ def section(*,
     if textarea_desc:
       display(widgets.HTML(f'<p>{textarea_desc}</p>'))
     textarea_box = widgets.Textarea(
-      layout=widgets.Layout(width="100%", height='125px'),
-      placeholder=textarea_placeholder,
-      disabled=False)
+      layout=widgets.Layout(width = "100%", height = '125px'),
+      placeholder = textarea_placeholder,
+      disabled = False)
     display(textarea_box)
-    textarea_box.dest = lambda: path_text.value
-    return textarea_box
+    return { 'path': path_text_input, 'textarea': textarea_box }
+
+  return { 'path': path_text_input, 'textarea': None }
 
 def render(store):
 
+  display(widgets.HTML(f'<h2>Project</h2>'))
+  display(widgets.HTML(f'''<p>Check the project you use.<br/>
+It will change <b>Root Path</b> and <b>Path</b> of each sections.
+Think of it as a preset. Of course you can override each path manually.</p>'''))
+  
+  options = ['stable-diffusion-webui', 'ComfyUI', 'Others']
+  platform_radio = widgets.RadioButtons(options = options)
+  display(platform_radio)
+
   display(widgets.HTML(f'<h2>Root Path</h2>'))
   display(widgets.HTML(f'<p>Specity the root directory of the project (e.g. <b>stable-diffusin-wedui</b> or <b>ComfyUI</b>).</p>'))
-  root_text_input = widgets.Text(value = '/workspace/stable-diffusion-webui/')
+  root_text_input = widgets.Text(value = '/workspace/stable-diffusion-webui/', layout = widgets.Layout(width="92%"),)
   display(root_text_input)
 
   checkpoint_list = [
@@ -121,16 +134,17 @@ def render(store):
   textarea_desc += 'Note that any sentence following after "##" is treated as comment.'
   textarea_desc += 'So ignored when parsing URL, but useful for taking memo (e.g. model name).'
 
-  checkpoint_textarea = section(title = 'Checkpoints', 
-                                default_path = 'models/Stable-diffusion/',
-                                items = checkpoint_list, 
-                                textarea = True,
-                                textarea_desc = textarea_desc,
-                                textarea_placeholder = '''Example:
+  checkpoint = section(
+    title = 'Checkpoints', 
+    default_path = 'models/Stable-diffusion/',
+    items = checkpoint_list, 
+    textarea = True,
+    textarea_desc = textarea_desc,
+    textarea_placeholder = '''Example:
 https://civitai.com/models/20282?modelVersionId=58992 ## Henmix_Real v3.0
 https://huggingface.co/CompVis/stable-diffusion-v-1-4-original/blob/main/sd-v1-4-full-ema.ckpt
 https://civitai.com/models/33918 ## Shampoo Mix latest version''',
-                                store = store)
+    store = store)
 
   vae_list = [
     Item(display_name = 'vae-ft-ema-560000-ema-pruned (335 MB)',
@@ -143,12 +157,13 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version''',
          url = 'https://huggingface.co/stabilityai/sdxl-vae/resolve/main/sdxl_vae.safetensors',),
   ]
 
-  vae_textarea = section(title = 'VAEs', 
-                         default_path = 'models/VAE/',
-                         items = vae_list, 
-                         textarea = True,
-                         textarea_desc = 'The rule is same as "Custom URLs" from "Checkpoints" section.',
-                         store = store)
+  vae = section(
+    title = 'VAEs', 
+    default_path = 'models/VAE/',
+    items = vae_list, 
+    textarea = True,
+    textarea_desc = 'The rule is same as "Custom URLs" from "Checkpoints" section.',
+    store = store)
   
   textual_inversion_list = [
     Item(display_name = 'bad_prompt.pt',
@@ -169,30 +184,34 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version''',
          url = 'https://civitai.com/api/download/models/5119',),
   ]
 
-  textual_inversion_textarea = section(title = 'Textual Inversions', 
-                                       default_path = 'embeddings/',
-                                       items = textual_inversion_list, 
-                                       textarea = True,
-                                       textarea_desc = 'The rule is same as "Custom URLs" from "Checkpoints" section.',
-                                       store = store) 
+  textual_inversion = section(
+    title = 'Textual Inversions', 
+    default_path = 'embeddings/',
+    items = textual_inversion_list, 
+    textarea = True,
+    textarea_desc = 'The rule is same as "Custom URLs" from "Checkpoints" section.',
+    store = store) 
   
-  hyper_network_textarea = section(title = 'Hyper Networks', 
-                                   default_path = 'models/hypernetworks/',
-                                   textarea = True,
-                                   textarea_desc = 'The rule is same as "Custom URLs" from "Checkpoints" section.',
-                                   store = store)
+  hyper_network = section(
+    title = 'Hyper Networks', 
+    default_path = 'models/hypernetworks/',
+    textarea = True,
+    textarea_desc = 'The rule is same as "Custom URLs" from "Checkpoints" section.',
+    store = store)
 
-  lora_textarea = section(title = 'LoRA', 
-                          default_path = 'models/Lora/',
-                          textarea = True,
-                          textarea_desc = 'The rule is same as "Custom URLs" from "Checkpoints" section.',
-                          store = store)
+  lora = section(
+    title = 'LoRA', 
+    default_path = 'models/Lora/',
+    textarea = True,
+    textarea_desc = 'The rule is same as "Custom URLs" from "Checkpoints" section.',
+    store = store)
   
-  lycoris_textarea = section(title = 'LyCORIS', 
-                             default_path = 'models/LyCORIS/',
-                             textarea = True,
-                             textarea_desc = 'The rule is same as "Custom URLs" from "Checkpoints" section.',
-                             store = store)
+  lycoris = section(
+    title = 'LyCORIS', 
+    default_path = 'models/LyCORIS/',
+    textarea = True,
+    textarea_desc = 'The rule is same as "Custom URLs" from "Checkpoints" section.',
+    store = store)
 
   controlnet_v1_0_list = [
     Item(display_name = display_name, 
@@ -209,10 +228,11 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version''',
     ]
   ]
 
-  section(title = 'ControlNet v1.0', 
-          default_path = 'models/ControlNet/',
-          items = controlnet_v1_0_list, 
-          store = store)
+  controlnet_v1 = section(
+    title = 'ControlNet v1.0', 
+    default_path = 'models/ControlNet/',
+    items = controlnet_v1_0_list, 
+    store = store)
 
   controlnet_v1_1_list = [
     Item(display_name = display_name, 
@@ -235,11 +255,11 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version''',
     ]
   ]
 
-  section(title = 'ControlNet v1.1', 
-          default_path = 'models/ControlNet/',
-          items = controlnet_v1_1_list, 
-          store = store, 
-          check_all = True)
+  controlnet_v1_1 = section(
+    title = 'ControlNet v1.1', 
+    default_path = 'models/ControlNet/',
+    items = controlnet_v1_1_list, 
+    store = store)
 
   t2i_adapter_list = [
     Item(display_name = display_name,
@@ -261,11 +281,11 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version''',
     ]
   ]
 
-  section(title = 'T2I-Adapter', 
-          default_path = 'models/ControlNet/',
-          items = t2i_adapter_list, 
-          store = store, 
-          check_all = True)
+  t2i_adapter = section(
+    title = 'T2I-Adapter', 
+    default_path = 'models/ControlNet/',
+    items = t2i_adapter_list, 
+    store = store)
 
   coadapter_list = [
     Item(display_name = display_name, 
@@ -280,23 +300,57 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version''',
     ]
   ]
 
-  section(title = 'CoAdapter',
-          default_path='models/ControlNet/',
-          description = '''Note that currently sd-webui-controlnet does not support CoAdapter.
-          (REF: <a href="http://https://github.com/Mikubill/sd-webui-controlnet/issues/614" target="_blank" style="color: blue; text-decoration:underline;">https://github.com/Mikubill/sd-webui-controlnet/issues/614).</a>''',
-          items = coadapter_list, 
-          store = store)
+  coadapter = section(
+    title = 'CoAdapter',
+    default_path='models/ControlNet/',
+    description = '''Note that currently sd-webui-controlnet does not support CoAdapter.
+    (REF: <a href="http://https://github.com/Mikubill/sd-webui-controlnet/issues/614" target="_blank" style="color: blue; text-decoration:underline;">https://github.com/Mikubill/sd-webui-controlnet/issues/614).</a>''',
+    items = coadapter_list, 
+    store = store)
 
-  textareas = {
-    'checkpoint': checkpoint_textarea,
-    'vae': vae_textarea,
-    'textual_inversion': textual_inversion_textarea,
-    'hyper_network': hyper_network_textarea,
-    'lora': lora_textarea,
-    'lycoris': lycoris_textarea,
+  sections = {
+    'checkpoint': checkpoint,
+    'vae': vae,
+    'textual_inversion': textual_inversion,
+    'hyper_network': hyper_network,
+    'lora': lora,
+    'lycoris': lycoris,
+    'controlnet_v1': controlnet_v1,
+    'controlnet_v1_1': controlnet_v1_1,
+    't2i_adapter': t2i_adapter,
+    'coadapter': coadapter,
   }
 
-  return root_text_input, textareas
+  def platform_radio_on_change(event):
+    print("The value of the radio box is:", event)
+    if event['new'] == 'stable-diffusin-webui':
+      checkpoint['path'].value = 'models/Stable-diffusion/'
+      vae['path'].value = 'models/VAE/'
+      textual_inversion['path'].value = 'embeddings/'
+      hyper_network['path'].value = 'models/hypernetworks/'
+      lora['path'].value = 'models/Lora/'
+      lycoris['path'].value = 'models/LyCORIS/'
+      controlnet_v1['path'].value = 'models/ControlNet/'
+      controlnet_v1_1['path'].value = 'models/ControlNet/'
+      t2i_adapter['path'].value = 'models/ControlNet/'
+      coadapter['path'].value = 'models/ControlNet/'
+    if event['new'] == 'ComfyUI':
+      checkpoint['path'].value = 'models/checkpoints/'
+      vae['path'].value = 'models/vae'
+      textual_inversion['path'].value = 'models/embeddings/'
+      hyper_network['path'].value = 'models/hypernetworks/'
+      lora['path'].value = 'models/loras/'
+      lycoris['path'].value = 'models/loras/'
+      controlnet_v1['path'].value = 'models/controlnet/'
+      controlnet_v1_1['path'].value = 'models/controlnet/'
+      t2i_adapter['path'].value = 'models/controlnet/'
+      coadapter['path'].value = 'models/controlnet/'
+    else:
+      pass
+
+  platform_radio.observe(platform_radio_on_change, names = ['value'])
+
+  return root_text_input, sections
 
 def parse_textarea(*, textarea, dest, store):
   lines = textarea.value.split('\n')
