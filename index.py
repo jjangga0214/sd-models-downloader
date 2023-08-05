@@ -1,13 +1,18 @@
 import ipywidgets as widgets
-from utils import parse_url 
+from utils import parse_url, File
 import os
 
 class Item:
-  def __init__(self, *, display_name, url, dest = None, filename = None):
+  def __init__(self, *, display_name, file, dest = None, filename = None):
     self.display_name = display_name
-    self.url = url # download url
-    self.dest = dest # dir 
-    self.filename = filename
+    self.file = file # download url (FileUrl instance)
+    self.dest = dest
+
+class Section:
+  def __init__(self, *, path, items, textarea = None):
+    self.path = path
+    self.items = items
+    self.textarea = textarea
 
 def section(
   *, 
@@ -66,7 +71,6 @@ def section(
     return checkbox
   
   for item in items:
-    item.dest = lambda: path_text_input.value.strip()
     box = checkbox(item)
     if check_all:
       box.value = True
@@ -92,9 +96,9 @@ def section(
       placeholder = textarea_placeholder,
       disabled = False)
     display(textarea_box)
-    return { 'path': path_text_input, 'textarea': textarea_box }
-
-  return { 'path': path_text_input, 'textarea': None }
+    return Section(path = path_text_input, items = items, textarea = textarea_box )
+  
+  return Section(path = path_text_input, items = items)
 
 def render(store):
 
@@ -114,22 +118,22 @@ Think of it as a preset. Of course you can override each path manually.</p>'''))
 
   checkpoint_list = [
     Item(display_name = 'v1-5-pruned-emaonly (4.27 GB)',
-         url = f'https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned.safetensors',),
+         file = File(url = f'https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned.safetensors',)),
     Item(display_name = 'v1-5-pruned (7.7 GB)',
-         url = f'https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned.safetensors',),
+         file = File(url = f'https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned.safetensors',)),
     Item(display_name = 'sd-v1-5-inpainting (4.27 GB)',
-         url = f'https://huggingface.co/runwayml/stable-diffusion-inpainting/resolve/main/sd-v1-5-inpainting.ckpt',),
+         file = File(url = f'https://huggingface.co/runwayml/stable-diffusion-inpainting/resolve/main/sd-v1-5-inpainting.ckpt',)),
     Item(display_name = 'sd_xl_base_1.0 (6.94 GB)',
-         url = f'https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors',),
+         file = File(url = f'https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors',)),
     Item(display_name = 'sd_xl_refiner_1.0 (6.08 GB)',
-         url = f'https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0/resolve/main/sd_xl_refiner_1.0.safetensors',),
+         file = File(url = f'https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0/resolve/main/sd_xl_refiner_1.0.safetensors',)),
   ]
 
   textarea_desc = 'You can also paste multiple model URLs into textarea below from civitai.com or huggingface.co. '
   textarea_desc += 'For example, <a href="https://civitai.com/models/20282" target="_blank" style="color: blue; text-decoration:underline;">https://civitai.com/models/20282</a> means the latest version of "Henmix_Real" model. '
   textarea_desc += 'On the other hand, <a href="https://civitai.com/models/20282?modelVersionId=58992" target="_blank" style="color: blue; text-decoration:underline;">https://civitai.com/models/20282?modelVersionId=58992</a> means v3.0 of "Henmix_Real" model. '
   textarea_desc += 'From civitai.com or huggingface.co, just copy and paste the model url from browser. '
-  textarea_desc += 'You can also list url not from civitai.com or huggingface.co, but you should input the url of raw file. '
+  textarea_desc += 'You can also list any url not from civitai.com or huggingface.co, but you should input the url of raw file. '
   textarea_desc += 'Multiple URLs should be separated by newlines (not comma). '
   textarea_desc += 'Note that any sentence following after "##" is treated as comment.'
   textarea_desc += 'So ignored when parsing URL, but useful for taking memo (e.g. model name).'
@@ -148,13 +152,13 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version''',
 
   vae_list = [
     Item(display_name = 'vae-ft-ema-560000-ema-pruned (335 MB)',
-         url = 'https://huggingface.co/stabilityai/sd-vae-ft-ema-original/resolve/main/vae-ft-ema-560000-ema-pruned.safetensors',),
+         file = File(url = 'https://huggingface.co/stabilityai/sd-vae-ft-ema-original/resolve/main/vae-ft-ema-560000-ema-pruned.safetensors',)),
     Item(display_name = 'vae-ft-mse-840000-ema-pruned (335 MB)',
-         url = 'https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors',),
-    Item(display_name = 'kl-f8-anime2 (405 MB)',
-         url = 'https://huggingface.co/hakurei/waifu-diffusion-v1-4/resolve/main/vae/kl-f8-anime2.ckpt',),     
+         file = File(url = 'https://huggingface.co/stabilityai/sd-vae-ft-mse-original/resolve/main/vae-ft-mse-840000-ema-pruned.safetensors',)),
+    Item(display_name = ' (405 MB)',
+         file = File(url = 'https://huggingface.co/hakurei/waifu-diffusion-v1-4/resolve/main/vae/kl-f8-anime2.ckpt',)),     
     Item(display_name = 'sdxl_vae (335 MB)',
-         url = 'https://huggingface.co/stabilityai/sdxl-vae/resolve/main/sdxl_vae.safetensors',),
+         file = File(url = 'https://huggingface.co/stabilityai/sdxl-vae/resolve/main/sdxl_vae.safetensors',)),
   ]
 
   vae = section(
@@ -167,21 +171,33 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version''',
   
   textual_inversion_list = [
     Item(display_name = 'bad_prompt.pt',
-         url = 'https://huggingface.co/datasets/Nerfgun3/bad_prompt/resolve/main/bad_prompt.pt',),
+         file = File(url = 'https://huggingface.co/datasets/Nerfgun3/bad_prompt/resolve/main/bad_prompt.pt',)),
     Item(display_name = 'bad_prompt_version2.pt',
-         url = 'https://huggingface.co/datasets/Nerfgun3/bad_prompt/resolve/main/bad_prompt_version2.pt',),
+         file = File(url = 'https://huggingface.co/datasets/Nerfgun3/bad_prompt/resolve/main/bad_prompt_version2.pt',
+                       name='bad_prompt_version2.pt',
+                       image='https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/0f12ec45-0d26-4e15-0bb1-6e23230d8700/width=450/bad_prompt_showcase.jpeg')),
     Item(display_name = 'EasyNegative.safetensors',
-         url = 'https://huggingface.co/datasets/gsdf/EasyNegative/resolve/main/EasyNegative.safetensors',),
+         file = File(url = 'https://huggingface.co/datasets/gsdf/EasyNegative/resolve/main/EasyNegative.safetensors',
+                       name='EasyNegative.safetensors',
+                       image='https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/a2505a48-8eed-4b12-b6a0-6a8ec7e0c600/width=3387/sample01.jpeg')),
     Item(display_name = 'badhandv4',
-         url = 'https://civitai.com/api/download/models/20068',),
+         file = File(url = 'https://civitai.com/api/download/models/20068',
+                       name='badhandv4.pt',
+                       image='https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/45318cc7-231d-4d8a-044d-a081d0a40700/width=450/212048.jpeg')),
     Item(display_name = 'negative_hand-neg.pt',
-         url = 'https://civitai.com/api/download/models/60938',),
+         file = File(url = 'https://civitai.com/api/download/models/60938',
+                       name='negative_hand-neg.pt',
+                       image='https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/1de1b4da-e9eb-43bf-9e9c-050e51cbbb25/width=450/667878.jpeg')),
     Item(display_name = 'ng_deepnegative_v1_75t.pt',
-         url = 'https://civitai.com/api/download/models/5637',),
+         file = File(url = 'https://civitai.com/api/download/models/5637',
+                       name='ng_deepnegative_v1_75t.pt',
+                       image='https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/f7fe0b31-86a6-48ff-4fc2-906227af9300/width=450/45555.jpeg')),
     Item(display_name = 'ulzzang-6500.pt',
-         url = 'https://huggingface.co/yesyeahvh/ulzzang-6500/resolve/main/ulzzang-6500.pt',),
+         file = File(url = 'https://huggingface.co/yesyeahvh/ulzzang-6500/resolve/main/ulzzang-6500.pt',)),
     Item(display_name = 'pureerosface_v1.pt',
-         url = 'https://civitai.com/api/download/models/5119',),
+         file = File(url = 'https://civitai.com/api/download/models/5119',
+                       name='pureerosface_v1.pt',
+                       image='https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/9fbf8bf0-aad7-4360-eeb0-3e2e09628900/width=450/110973.jpeg')),
   ]
 
   textual_inversion = section(
@@ -213,9 +229,9 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version''',
     textarea_desc = 'The rule is same as "Custom URLs" from "Checkpoints" section.',
     store = store)
 
-  controlnet_v1_0_list = [
+  controlnet_v1_list = [
     Item(display_name = display_name, 
-         url = f'https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/{filename}')
+         file = File(url = f'https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/{filename}'))
     for display_name, filename in [
       ('sd15_canny (5.71 GB)', 'control_sd15_canny.pth'),
       ('sd15_depth (5.71 GB)', 'control_sd15_depth.pth'),
@@ -231,12 +247,12 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version''',
   controlnet_v1 = section(
     title = 'ControlNet v1.0', 
     default_path = 'models/ControlNet/',
-    items = controlnet_v1_0_list, 
+    items = controlnet_v1_list, 
     store = store)
 
   controlnet_v1_1_list = [
     Item(display_name = display_name, 
-         url = f'https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/{filename}') 
+         file = File(url = f'https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/{filename}'))
     for display_name, filename in [
       ('v11e_sd15_ip2p (1.45 GB)', 'control_v11e_sd15_ip2p.pth'),
       ('v11e_sd15_shuffle (1.45 GB)', 'control_v11e_sd15_shuffle.pth'),
@@ -263,7 +279,7 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version''',
 
   t2i_adapter_list = [
     Item(display_name = display_name,
-         url = f'https://huggingface.co/TencentARC/T2I-Adapter/resolve/main/models/{filename}',) 
+         file = File(url = f'https://huggingface.co/TencentARC/T2I-Adapter/resolve/main/models/{filename}',)) 
     for display_name, filename in [
       ('canny_sd14v1 (308 MB)', 't2iadapter_canny_sd14v1.pth'),
       ('canny_sd15v2 (308 MB)', 't2iadapter_canny_sd15v2.pth'),
@@ -289,7 +305,7 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version''',
 
   coadapter_list = [
     Item(display_name = display_name, 
-         url = f'https://huggingface.co/TencentARC/T2I-Adapter/resolve/main/models/{filename}',) 
+         file = File(url = f'https://huggingface.co/TencentARC/T2I-Adapter/resolve/main/models/{filename}',))
     for display_name, filename in [
       ('canny-sd15v1 (308 MB)', 'coadapter-canny-sd15v1.pth'),
       ('color-sd15v1 (74.8 MB)', 'color-coadapter-sd15v1.pth'),
@@ -324,27 +340,27 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version''',
   def platform_radio_on_change(event):
     print("The value of the radio box is:", event)
     if event['new'] == 'stable-diffusin-webui':
-      checkpoint['path'].value = 'models/Stable-diffusion/'
-      vae['path'].value = 'models/VAE/'
-      textual_inversion['path'].value = 'embeddings/'
-      hyper_network['path'].value = 'models/hypernetworks/'
-      lora['path'].value = 'models/Lora/'
-      lycoris['path'].value = 'models/LyCORIS/'
-      controlnet_v1['path'].value = 'models/ControlNet/'
-      controlnet_v1_1['path'].value = 'models/ControlNet/'
-      t2i_adapter['path'].value = 'models/ControlNet/'
-      coadapter['path'].value = 'models/ControlNet/'
+      checkpoint.path.value = 'models/Stable-diffusion/'
+      vae.path.value = 'models/VAE/'
+      textual_inversion.path.value = 'embeddings/'
+      hyper_network.path.value = 'models/hypernetworks/'
+      lora.path.value = 'models/Lora/'
+      lycoris.path.value = 'models/LyCORIS/'
+      controlnet_v1.path.value = 'models/ControlNet/'
+      controlnet_v1_1.path.value = 'models/ControlNet/'
+      t2i_adapter.path.value = 'models/ControlNet/'
+      coadapter.path.value = 'models/ControlNet/'
     if event['new'] == 'ComfyUI':
-      checkpoint['path'].value = 'models/checkpoints/'
-      vae['path'].value = 'models/vae'
-      textual_inversion['path'].value = 'models/embeddings/'
-      hyper_network['path'].value = 'models/hypernetworks/'
-      lora['path'].value = 'models/loras/'
-      lycoris['path'].value = 'models/loras/'
-      controlnet_v1['path'].value = 'models/controlnet/'
-      controlnet_v1_1['path'].value = 'models/controlnet/'
-      t2i_adapter['path'].value = 'models/controlnet/'
-      coadapter['path'].value = 'models/controlnet/'
+      checkpoint.path.value = 'models/checkpoints/'
+      vae.path.value = 'models/vae'
+      textual_inversion.path.value = 'models/embeddings/'
+      hyper_network.path.value = 'models/hypernetworks/'
+      lora.path.value = 'models/loras/'
+      lycoris.path.value = 'models/loras/'
+      controlnet_v1.path.value = 'models/controlnet/'
+      controlnet_v1_1.path.value = 'models/controlnet/'
+      t2i_adapter.path.value = 'models/controlnet/'
+      coadapter.path.value = 'models/controlnet/'
     else:
       pass
 
@@ -352,8 +368,9 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version''',
 
   return root_text_input, sections
 
-def parse_textarea(*, textarea, dest, store):
+def parse_textarea(*, textarea, dest):
   lines = textarea.value.split('\n')
+  items = []
   for line in lines:
     comment_idx = line.find('##')
     if comment_idx != -1:
@@ -363,9 +380,10 @@ def parse_textarea(*, textarea, dest, store):
     url = url.strip()
     if not url:
       continue
-    download_url = parse_url(url)
-    store.add(Item(
-      display_name = None,
-      url = download_url,
-      dest = dest,
-    ))
+    file = parse_url(url)
+    items.append(
+      Item(
+        display_name = None,
+        file = file,
+        dest = dest))
+  return items
