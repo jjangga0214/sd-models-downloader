@@ -18,7 +18,7 @@ But in fact, you can use this notebook in **any environments** (local machine, c
 
 ### Step 1
 
-Just simply clone the project
+Just simply clone the project.
 
 ```bash
 git clone https://github.com/jjangga0214/sd-models-downloader.git
@@ -29,10 +29,11 @@ Then open the Jupyter Notebook `sd-models-downloader/index.ipynb`.
 ### Step 2
 
 A section like the screenshot below would appear.
-
-![./images/1.png](./images/1.png)
-
 Execute the cell.
+
+___
+![./images/1.png](./images/1.png)
+___
 
 ### Step 3
 
@@ -40,7 +41,9 @@ Now the UI is generated. **(The screenshot below is just part of the whole page.
 
 There're sections for Checkpoints, VAEs, Textual Inversions, Hyper Networks, LoRA, LyCORIS, ContrnolNet (v1.0, v1.1), T2I-Adapter, CoAdapter.
 
+___
 ![./images/2.png](./images/2.png)
+___
 
 ### Step 4
 
@@ -49,13 +52,19 @@ In that case, click the message like the screenshot below.
 It will be at the end of the UI.
 Then the full UI will be shown.
 
+___
 ![./images/3.png](./images/3.png)
+___
 
 ### Step 5
 
 Now it's time to download. Simply execute the cell!
 
+___
 ![./images/4.png](./images/4.png)
+___
+
+### Step 6
 
 When you notice you need more models later, then just change the model selection and execute it again.
 
