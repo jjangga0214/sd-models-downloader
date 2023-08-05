@@ -8,11 +8,11 @@ But in fact, you can use this notebook in **any environments** (local machine, c
 
 ## Features
 
-- Automatic convert normal page URL to download URL
-- Support Any Project (e.g. stable-diffusion-webui, ComfyUI, etc)
 - Automatic Preview Image Download
+- Automatically Convert Normal Page URL To Download URL
+- Supports Sub-Directory (custom category support)
+- Supports Any Project (e.g. stable-diffusion-webui, ComfyUI, etc)
 - Custom Download URL
-- Support sub-directory
 
 ## Usage
 
@@ -66,7 +66,7 @@ ___
 
 ### Step 6
 
-When you notice you need more models later, then just change the model selection and execute it again.
+When you notice you need more models later, then just change the model selection and execute the download cell again.
 
 ## License
 
