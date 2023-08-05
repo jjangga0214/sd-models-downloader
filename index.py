@@ -409,9 +409,9 @@ def parse_huggingface_url(url):
 
 def parse_url(url):
   parsed_url = urlparse(url)
-  if 'civitai.com' in parsed_url.netloc:
+  if 'civitai.com' == parsed_url.netloc:
     return parse_civitai_url(url)
-  elif 'huggingface.co' in parsed_url.netloc:
+  elif 'huggingface.co' == parsed_url.netloc:
     return parse_huggingface_url(url)
   else:
     return File(url=url,)

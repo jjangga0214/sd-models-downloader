@@ -9,7 +9,7 @@ But in fact, you can use this notebook in **any environments** (local machine, c
 ## Features
 
 - Automatic Preview Image Download
-- Automatically Convert Normal Page URL To Download URL
+- Automatically Converts Normal Page URL To Download URL
 - Supports Sub-Directory (custom category support)
 - Supports Any Project (e.g. stable-diffusion-webui, ComfyUI, etc)
 - Custom Download URL
