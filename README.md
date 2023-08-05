@@ -32,7 +32,7 @@ A section like the screenshot below would appear.
 Execute the cell.
 
 ___
-![./images/1.png](./images/1.png)
+![./images/step-2.png](./images/step-2.png)
 ___
 
 ### Step 3
@@ -42,18 +42,24 @@ Now the UI is generated. **(The screenshot below is just part of the whole page.
 There're sections for Checkpoints, VAEs, Textual Inversions, Hyper Networks, LoRA, LyCORIS, ContrnolNet (v1.0, v1.1), T2I-Adapter, CoAdapter.
 
 ___
-![./images/2.png](./images/2.png)
+![./images/step-3.png](./images/step-3.png)
 ___
 
 ### Step 4
 
 As the UI page (output of the cell) is long, it may be trimmed.
-In that case, click the message like the screenshot below.
+In that case, click the message ("__SHOW MORE OUTPUTS__") like the screenshot below.
 It will be at the end of the UI.
 Then the full UI will be shown.
 
 ___
-![./images/3.png](./images/3.png)
+![./images/step-4-1.png](./images/step-4-1.png)
+___
+
+The message can be different by the environment.
+For example, it might be like this screenshot below.
+___
+![./images/step-4-2.png](./images/step-4-2.png)
 ___
 
 ### Step 5
@@ -61,12 +67,38 @@ ___
 Now it's time to download. Simply execute the cell!
 
 ___
-![./images/4.png](./images/4.png)
+![./images/step-5.png](./images/step-5.png)
 ___
 
 ### Step 6
 
 When you notice you need more models later, then just change the model selection and execute the download cell again.
+
+### Trouble Shooting
+
+#### Timeout
+
+Sometimes the download request is timed out.
+
+![./images/trouble-shooting-timeout.png](./images/trouble-shooting-timeout.png)
+
+This is not a bug at all.
+The server may be busy or the network is congested.
+CivitAI has a bit higher probability than others like Huggingface.
+In this case, just try again!
+When the re-trial also fails, you should wait until the server or network gets healthier.
+If you don't want to wait, change the URL.
+
+#### Infinite Awaiting
+
+Sometimes download is blocked by infinite awaiting.
+
+![./images/trouble-shooting-awaiting.png](./images/trouble-shooting-awaiting.png)
+
+This is not a bug either.
+You should just wait a minute at first.
+But if it doesn't change, you should stop the cell and take an action.
+The solution is the same as the "Timeout" section above.
 
 ## License
 
