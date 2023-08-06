@@ -8,11 +8,12 @@ But in fact, you can use this notebook in **any environments** (local machine, c
 
 ## Features
 
-- Automatic Preview Image Download
+- Provides Frequently Used Models (e.g. ControlNet) As Preset (Checkbox)
+- Custom Download URL
+- Automatic Download Of Preview Image
 - Automatically Converts Normal Page URL To Download URL
 - Supports Sub-Directory (custom category support)
 - Supports Any Project (e.g. stable-diffusion-webui, ComfyUI, etc)
-- Custom Download URL
 
 ## Usage
 
