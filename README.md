@@ -41,7 +41,7 @@ ___
 
 Now the UI is generated. **(The screenshot below is just part of the whole page.)**
 
-There're sections for Checkpoints, VAEs, Textual Inversions, Hyper Networks, LoRA, LyCORIS, ContrnolNet (v1.0, v1.1), T2I-Adapter, CoAdapter.
+There're sections for Checkpoints, VAEs, Textual Inversions, Hyper Networks, LoRA, LyCORIS, ContrnolNet (v1.0, v1.1), T2I-Adapter, CoAdapter, and Extensions.
 
 ___
 ![./images/step-3.png](./images/step-3.png)
