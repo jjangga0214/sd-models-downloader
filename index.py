@@ -6,19 +6,40 @@ import ipywidgets as widgets
 
 
 class Item:
-    def __init__(self, *, display_name, file, dest=None, sub_dir="", checked=False):
-        self.display_name = display_name
+    def __init__(
+        self, *, file, display_name=None, dest=None, sub_dir="", checked=False
+    ):
         self.file = file  # (File instance)
+        self.display_name = display_name
         self.dest = dest
         self.sub_dir = sub_dir
         self.checked = checked
 
 
 class Section:
-    def __init__(self, *, path, items, textarea=None):
+    def __init__(self, *, path, items=None, textarea=None):
         self.path = path
         self.items = items
         self.textarea = textarea
+
+
+def section_base(
+    *,
+    title,
+    default_path,
+    description=None,
+):
+    display(widgets.HTML(f"<h2>{title}</h2>"))
+    if description:
+        display(widgets.HTML(f"<p>{description}</p>"))
+
+    display(widgets.HTML(f"<h4>Path<h4>"))
+    path_text_input = widgets.Text(
+        value=default_path,
+        layout=widgets.Layout(width="92%"),
+    )
+    display(path_text_input)
+    return path_text_input
 
 
 def section(
@@ -32,16 +53,9 @@ def section(
     textarea=False,
     check_all=False,
 ):
-    display(widgets.HTML(f"<h2>{title}</h2>"))
-    if description:
-        display(widgets.HTML(f"<p>{description}</p>"))
-
-    display(widgets.HTML(f"<h4>Path<h4>"))
-    path_text_input = widgets.Text(
-        value=default_path,
-        layout=widgets.Layout(width="92%"),
+    path_text_input = section_base(
+        title=title, default_path=default_path, description=description
     )
-    display(path_text_input)
 
     if items:
         display(widgets.HTML(f"<h4>Models<h4>"))
@@ -443,6 +457,41 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version""",
         items=coadapter_list,
     )
 
+    custom_controlnet = section(
+        title="Custom ControlNet Models",
+        default_path="models/ControlNet/",
+        description="""Optionally list URLs for 3rd-party(e.g. TemporalNet) models or your own trained ControlNet models.""",
+        items=[],
+        textarea=True,
+    )
+
+    extension_path_text_input = section_base(
+        title="Extensions",
+        default_path="extensions/",
+        description="List stable-diffusion-webui extensions URLs to be automatically installed.",
+    )
+    extension_install_checkbox = widgets.Checkbox(
+        value=True,
+        layout=widgets.Layout(width="92%"),
+        description="Execute install.py after clone",
+        disabled=False,
+    )
+    display(extension_install_checkbox)
+    extension_textarea_box = widgets.Textarea(
+        layout=widgets.Layout(width="100%", height="125px"),
+        placeholder="""Example:
+https://github.com/Bing-su/adetailer
+https://github.com/KohakuBlueleaf/a1111-sd-webui-lycoris
+https://github.com/ashen-sensored/sd-dynamic-thresholding-rcfg""",
+        disabled=False,
+    )
+    display(extension_textarea_box)
+    extension = {
+        "path": extension_path_text_input,
+        "textarea": extension_textarea_box,
+        "install": extension_install_checkbox,
+    }
+
     sections = {
         "checkpoint": checkpoint,
         "vae": vae,
@@ -454,6 +503,7 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version""",
         "controlnet_v1_1": controlnet_v1_1,
         "t2i_adapter": t2i_adapter,
         "coadapter": coadapter,
+        "custom_controlnet": custom_controlnet,
     }
 
     def platform_radio_on_change(event):
@@ -469,6 +519,7 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version""",
             controlnet_v1_1.path.value = "models/ControlNet/"
             t2i_adapter.path.value = "models/ControlNet/"
             coadapter.path.value = "models/ControlNet/"
+            custom_controlnet.path.value = "models/ControlNet/"
         if event["new"] == "ComfyUI":
             checkpoint.path.value = "models/checkpoints/"
             vae.path.value = "models/vae"
@@ -480,12 +531,13 @@ https://civitai.com/models/33918 ## Shampoo Mix latest version""",
             controlnet_v1_1.path.value = "models/controlnet/"
             t2i_adapter.path.value = "models/controlnet/"
             coadapter.path.value = "models/controlnet/"
+            custom_controlnet.path.value = "models/controlnet/"
         else:
             pass
 
     platform_radio.observe(platform_radio_on_change, names=["value"])
 
-    return root_text_input, sections
+    return root_text_input, sections, extension
 
 
 class File:
@@ -538,21 +590,17 @@ def parse_huggingface_url(url):
     dirs = parsed_url.path.split("/")  # dirs[0] is '' empty string
     dirs[3] = "resolve"
     file_url = f'{parsed_url.scheme}://{parsed_url.netloc}{"/".join(dirs)}'
-    return File(
-        url=file_url,
-    )
+    return File(url=file_url)
 
 
 def parse_url(url):
-    parsed_url = urlparse(url)
+    parsed_url = urlparse(url.strip())
     if "civitai.com" == parsed_url.netloc:
         return parse_civitai_url(url)
     elif "huggingface.co" == parsed_url.netloc:
         return parse_huggingface_url(url)
     else:
-        return File(
-            url=url,
-        )
+        return File(url=url)
 
 
 def extract_sub_dir(line):
@@ -581,7 +629,6 @@ def parse_textarea(*, textarea, dest):
         file = parse_url(url)
         items.append(
             Item(
-                display_name=None,
                 file=file,
                 dest=dest,
                 sub_dir=sub_dir,
