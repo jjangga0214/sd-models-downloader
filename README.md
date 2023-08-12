@@ -14,6 +14,7 @@ But in fact, you can use this notebook in **any environments** (local machine, c
 - Automatically Converts Normal Page URL To Download URL
 - Supports Sub-Directory (custom category support)
 - Supports Any Project (e.g. stable-diffusion-webui, ComfyUI, etc)
+- Supports Auto Installation Of Extensions
 
 ## Usage
 
